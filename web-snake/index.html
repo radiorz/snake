@@ -28,6 +28,7 @@
       static NODE_WIDTH = 20;
       static NODE_HEIGHT = 20;
       static DEFAULT_FOOD_COLOR = 'green'
+      static SNAKE_MOVE_TIME = 150
     }
     const DIRECTIONS = {
       right: 'right',
@@ -227,21 +228,26 @@
             return
           }
           this.snake.render(this.map);  // 根据body 的数据 重新渲染蛇在页面位置
-        }, 150);
+        }, Consts.SNAKE_MOVE_TIME);
       }
       // 绑定键盘事件 控制蛇的方向
       bindKey() {
         document.addEventListener('keydown', (e) => {
+          console.log(`e`, e)
           switch (e.keyCode) {
+            case 65:
             case 37:
               this.snake.direction = DIRECTIONS.left;
               break;
+            case 87:
             case 38:
               this.snake.direction = DIRECTIONS.top;
               break;
+            case 68:
             case 39:
               this.snake.direction = DIRECTIONS.right;
               break;
+            case 83:
             case 40:
               this.snake.direction = DIRECTIONS.bottom;
               break;
