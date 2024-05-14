@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+</head>
+
+<body>
+  <div id="map" style="width:80%;height:400px;border: 1px solid orange;"></div>
+
+  <script>
+
+    class Utils {
+      // 生成随机坐标
+      static getRandom(a, b) {
+        let max = Math.max(a, b);
+        let min = Math.min(a, b);
+        return parseInt(Math.random() * (max - min)) + min;
+      }
+    }
+    // 食物类
+    class Food {
+      // 初始化食物（宽，高，颜色等）
+      constructor({ x = 0, y = 0, width = 20, height = 20, color = 'green' } = {}) {
+        // 结构赋值 参数默认值
+        // let options = {x = 0, y = 0, width = 20, height = 20, color = 'green'} || {};
+        // 存储食物
+        this.elements = [];
+        // 坐标
+        this.x = x;
+        this.y = y;
+
+        this.width = width;
+        this.height = height;
+        this.color = color;
+      }
+      getRandomPosition() {
+        const x = Utils.getRandom(0, map.offsetWidth / this.width - 10) * this.width;
+        const y = Utils.getRandom(0, map.offsetHeight / this.height - 1) * this.height;
+        return { x, y }
+      }
+      // 在地图上随机生成
+      render(map) {
+        this.remove(); // 删除之前创建的食物
+
+        // 随机设置x,y的值
+        const { x, y } = this.getRandomPosition()
+        this.x = x;
+        this.y = y;
+        console.log(this.x, this.y);
+
+        // 创建食物 dom
+        let div = document.createElement('div');
+        map.appendChild(div);
+        this.elements.push(div);
+
+        // 设置div的样式
+        div.style.position = 'absolute';
+        div.style.left = this.x + 'px';
+        div.style.top = this.y + 'px';
+        div.style.width = this.width + 'px';
+        div.style.height = this.height + 'px';
+        div.style.backgroundColor = this.color;
+      }
+      // 管理食物（删除）
+      remove() {
+        // 从后往前
+        for (let i = this.elements.length - 1; i >= 0; i--) {
+          this.elements[i].parentNode.removeChild(this.elements[i]); // 删除div
+          this.elements.splice(i, 1); // 删除数组中的元素
+        }
+      }
+    }
+    const DIRECTIONS = {
+      right: 'right',
+      up: 'up',
+      down: 'down',
+      left: 'left'
+    }
+    // 蛇类
+    class Snake {
+      // 初始化蛇（宽，高，颜色、长度等）
+      constructor({ width = 20, height = 20, direction = DIRECTIONS.right } = {}) {
+        // 存储蛇
+        this.elements = [];
+
+        this.width = width;
+        this.height = height;
+        this.direction = direction;
+        // 蛇的身体 初始三节
+        this.body = [
+          { x: 3, y: 2, color: 'red' },
+          { x: 2, y: 2, color: 'blue' },
+          { x: 1, y: 2, color: 'blue' },
+        ];
+      }
+      // 在地图上初始定位
+      render(map) {
+        this.remove(); // 删除之前创建的蛇
+        for (let i = 0, len = this.body.length; i < len; i++) {
+          let object = this.body[i];
+
+          let div = document.createElement('div');
+          map.appendChild(div);
+          this.elements.push(div);
+
+          // 设置样式
+          div.style.position = 'absolute';
+          div.style.width = this.width + 'px';
+          div.style.height = this.height + 'px';
+          div.style.left = object.x * this.width + 'px';
+          div.style.top = object.y * this.height + 'px';
+          div.style.backgroundColor = object.color;
+        }
+      }
+      // 蛇的移动与管理（吃一个食物生成一个新的蛇对象）
+      move(food, map) {
+        // 控制蛇的移动 (当前蛇节 移动到上一个蛇节)
+        for (let i = this.body.length - 1; i > 0; i--) {
+          this.body[i].x = this.body[i - 1].x;
+          this.body[i].y = this.body[i - 1].y;
+        }
+        // 蛇头
+        let head = this.body[0];
+
+        // 蛇头的行进方向
+        switch (this.direction) {
+          case DIRECTIONS.right:
+            head.x += 1;
+            break;
+          case DIRECTIONS.left:
+            head.x -= 1;
+            break;
+          case DIRECTIONS.top:
+            head.y -= 1;
+            break;
+          case DIRECTIONS.bottom:
+            head.y += 1;
+            break;
+        }
+
+        if (this.isGetFood(head, food)) {
+          let last = this.body[this.body.length - 1];
+          // 身子变长
+          this.body.push({
+            x: last.x,
+            y: last.y,
+            color: last.color
+          });
+          // 重新生成一个食物
+          food.render(map);
+        }
+      }
+      isGetFood(head, food) {
+        let headX = head.x * this.width;
+        let headY = head.y * this.height;
+        return headX === food.x && headY === food.y
+      }
+      remove() {
+        for (let i = this.elements.length - 1; i >= 0; i--) {
+          // 删除div
+          this.elements[i].parentNode.removeChild(this.elements[i]);
+          // 删除数组中的元素
+          this.elements.splice(i, 1);
+        }
+      }
+    }
+    // 游戏的入口文件
+    class Game {
+      constructor(map) {
+        // 创建食物和蛇的实例
+        this.food = new Food();
+        this.snake = new Snake();
+        this.map = map;
+        // 定时器
+        this.timerId = null;
+      }
+      start() {
+        // 食物和蛇 渲染到地图上
+        this.food.render(this.map);
+        this.snake.render(this.map);
+        this.runSnake();
+        this.bindKey();
+
+      }
+      isSnakeHitMapEdge() {
+        var maxX = this.map.offsetWidth / this.snake.width;
+        var maxY = this.map.offsetHeight / this.snake.height;
+        var headX = this.snake.body[0].x;
+        var headY = this.snake.body[0].y;
+        return headX < 0 || headX >= maxX || headY < 0 || headY >= maxY
+      }
+      // 让蛇动起来
+      // 蛇会自动移动
+      runSnake() {
+        this.timerId = setInterval(() => {
+          // 要获取游戏对象中的蛇属性
+          this.snake.move(this.food, this.map);
+          // 2.2  当蛇遇到边界游戏结束
+
+          if (this.isSnakeHitMapEdge()) {
+            console.log('Game Over');
+            clearInterval(this.timerId);
+            return
+          }
+          this.snake.render(this.map);  // 根据body 的数据 重新渲染蛇在页面位置
+        }, 150);
+      }
+      // 绑定键盘事件 控制蛇的方向
+      bindKey() {
+        document.addEventListener('keydown', (e) => {
+          switch (e.keyCode) {
+            case 37:
+              this.snake.direction = DIRECTIONS.left;
+              break;
+            case 38:
+              this.snake.direction = DIRECTIONS.top;
+              break;
+            case 39:
+              this.snake.direction = DIRECTIONS.right;
+              break;
+            case 40:
+              this.snake.direction = DIRECTIONS.bottom;
+              break;
+          }
+        });
+      }
+    }
+
+    function bootstrap() {
+      // 全局的地图 map
+      let map = document.getElementById('map');
+      let game = new Game(map);
+      // 调用开始方法
+      game.start();
+    }
+    bootstrap()
+
+  </script>
+</body>
+
+</html>
