@@ -76,7 +76,7 @@
     const DIRECTIONS = {
       right: 'right',
       up: 'up',
-      down: 'down',
+      bottom: 'bottom',
       left: 'left'
     }
     // 蛇类
@@ -95,6 +95,14 @@
           { x: 2, y: 2, color: 'blue' },
           { x: 1, y: 2, color: 'blue' },
         ];
+      }
+      // 头
+      get head() {
+        return this.body[0]
+      }
+      // 尾巴
+      get last() {
+        return this.body[this.body.length - 1];
       }
       // 在地图上初始定位
       render(map) {
@@ -122,32 +130,30 @@
           this.body[i].x = this.body[i - 1].x;
           this.body[i].y = this.body[i - 1].y;
         }
-        // 蛇头
-        let head = this.body[0];
 
         // 蛇头的行进方向
         switch (this.direction) {
           case DIRECTIONS.right:
-            head.x += 1;
+            this.head.x += 1;
             break;
           case DIRECTIONS.left:
-            head.x -= 1;
+            this.head.x -= 1;
             break;
           case DIRECTIONS.top:
-            head.y -= 1;
+            this.head.y -= 1;
             break;
           case DIRECTIONS.bottom:
-            head.y += 1;
+            this.head.y += 1;
             break;
         }
 
-        if (this.isGetFood(head, food)) {
-          let last = this.body[this.body.length - 1];
+        if (this.isGetFood(this.head, food)) {
+
           // 身子变长
           this.body.push({
-            x: last.x,
-            y: last.y,
-            color: last.color
+            x: this.last.x,
+            y: this.last.y,
+            color: this.last.color
           });
           // 重新生成一个食物
           food.render(map);
