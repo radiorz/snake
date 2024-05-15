@@ -9,6 +9,7 @@
 
 <body>
   <div id="map" style="position:relative;width:80%;height:400px;border: 1px solid orange;"></div>
+  <button onclick="start()">start</button>
   <script>
 
     /**
@@ -223,7 +224,7 @@
           this.snake.move(this.food, this.map);
 
           if (this.isSnakeHitMapEdge() || this.isSnakeEatSelf()) {
-            console.log('Game Over');
+            alert('game over,得分:' + this.snake.body.length)
             clearInterval(this.timerId);
             return
           }
@@ -266,14 +267,15 @@
       }
     }
 
-    function bootstrap() {
-      // 全局的地图 map
-      let map = document.getElementById('map');
-      let game = new Game(map);
+    // 全局的地图 map
+    let map = document.getElementById('map');
+
+    function start() {
+      console.log(`start`,)
       // 调用开始方法
+      let game = new Game(map);
       game.start();
     }
-    bootstrap()
 
   </script>
 </body>
