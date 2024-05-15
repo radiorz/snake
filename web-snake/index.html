@@ -195,13 +195,19 @@
         // 定时器
         this.timerId = null;
       }
+      remove() {
+        clearInterval(this.timerId)
+        this.unbindKey()
+        this.food.remove()
+        this.snake.remove()
+      }
       start() {
+        this.remove()
         // 食物和蛇 渲染到地图上
         this.food.render(this.map);
         this.snake.render(this.map);
         this.runSnake();
         this.bindKey();
-
       }
       isSnakeHitMapEdge() {
         var maxX = this.map.offsetWidth / this.snake.width;
@@ -231,36 +237,40 @@
           this.snake.render(this.map);  // 根据body 的数据 重新渲染蛇在页面位置
         }, Consts.SNAKE_MOVE_TIME);
       }
+      onKey(e) {
+        let newDirection
+        switch (e.keyCode) {
+          case 65:
+          case 37:
+            newDirection = DIRECTIONS.left;
+            break;
+          case 87:
+          case 38:
+            newDirection = DIRECTIONS.top;
+            break;
+          case 68:
+          case 39:
+            newDirection = DIRECTIONS.right;
+            break;
+          case 83:
+          case 40:
+            newDirection = DIRECTIONS.bottom;
+            break;
+        }
+        if (typeof newDirection === 'undefined') { return }
+        console.log(`this.isOpposite(this.snake.direction, newDirection)`, this.snake.direction, newDirection, this.isOpposite(this.snake.direction, newDirection))
+        // 反方向不允许不然太容易死了
+        if (this.isOpposite(this.snake.direction, newDirection)) {
+          return
+        }
+        this.snake.direction = newDirection;
+      }
+      unbindKey() {
+        document.removeEventListener('keydown', this.onKey.bind(this))
+      }
       // 绑定键盘事件 控制蛇的方向
       bindKey() {
-        document.addEventListener('keydown', (e) => {
-          let newDirection
-          switch (e.keyCode) {
-            case 65:
-            case 37:
-              newDirection = DIRECTIONS.left;
-              break;
-            case 87:
-            case 38:
-              newDirection = DIRECTIONS.top;
-              break;
-            case 68:
-            case 39:
-              newDirection = DIRECTIONS.right;
-              break;
-            case 83:
-            case 40:
-              newDirection = DIRECTIONS.bottom;
-              break;
-          }
-          if (typeof newDirection === 'undefined') { return }
-          console.log(`this.isOpposite(this.snake.direction, newDirection)`, this.snake.direction, newDirection, this.isOpposite(this.snake.direction, newDirection))
-          // 反方向不允许不然太容易死了
-          if (this.isOpposite(this.snake.direction, newDirection)) {
-            return
-          }
-          this.snake.direction = newDirection;
-        });
+        document.addEventListener('keydown', this.onKey.bind(this));
       }
       isOpposite(oldDirection, newDirection) {
         return 180 === Math.abs(oldDirection - newDirection)
@@ -269,11 +279,11 @@
 
     // 全局的地图 map
     let map = document.getElementById('map');
+    let game = new Game(map);
 
     function start() {
-      console.log(`start`,)
+      console.log(`start`)
       // 调用开始方法
-      let game = new Game(map);
       game.start();
     }
 
