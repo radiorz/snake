@@ -31,10 +31,11 @@
       static SNAKE_MOVE_TIME = 150
     }
     const DIRECTIONS = {
-      right: 'right',
-      up: 'up',
-      bottom: 'bottom',
-      left: 'left'
+      // 按逆时针来算
+      top: 0,
+      left: 90,
+      bottom: 180,
+      right: 270,
     }
     // 食物类
     class Food {
@@ -141,7 +142,6 @@
           this.body[i].x = this.body[i - 1].x;
           this.body[i].y = this.body[i - 1].y;
         }
-
         // 蛇头的行进方向
         switch (this.direction) {
           case DIRECTIONS.right:
@@ -233,26 +233,36 @@
       // 绑定键盘事件 控制蛇的方向
       bindKey() {
         document.addEventListener('keydown', (e) => {
-          console.log(`e`, e)
+          let newDirection
           switch (e.keyCode) {
             case 65:
             case 37:
-              this.snake.direction = DIRECTIONS.left;
+              newDirection = DIRECTIONS.left;
               break;
             case 87:
             case 38:
-              this.snake.direction = DIRECTIONS.top;
+              newDirection = DIRECTIONS.top;
               break;
             case 68:
             case 39:
-              this.snake.direction = DIRECTIONS.right;
+              newDirection = DIRECTIONS.right;
               break;
             case 83:
             case 40:
-              this.snake.direction = DIRECTIONS.bottom;
+              newDirection = DIRECTIONS.bottom;
               break;
           }
+          if (typeof newDirection === 'undefined') { return }
+          console.log(`this.isOpposite(this.snake.direction, newDirection)`, this.snake.direction, newDirection, this.isOpposite(this.snake.direction, newDirection))
+          // 反方向不允许不然太容易死了
+          if (this.isOpposite(this.snake.direction, newDirection)) {
+            return
+          }
+          this.snake.direction = newDirection;
         });
+      }
+      isOpposite(oldDirection, newDirection) {
+        return 180 === Math.abs(oldDirection - newDirection)
       }
     }
 
